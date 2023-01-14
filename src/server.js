@@ -24,6 +24,17 @@ server.use(express.json());
 server.use(cors());
 server.listen(PORT);
 
+server.get('/participants', async(req, res) => {
+    try{
+        const gettingData = await db.collection('participants').find().toArray();
+
+        return res.status(200).send(gettingData);
+    }
+    catch(error){
+        return res.status(500).send(error.message);
+    } 
+});
+
 server.post('/participants', async(req, res) => {
     const schema = joi.object({name: joi.string().required()});
     const userName = {name: req.body.name};
