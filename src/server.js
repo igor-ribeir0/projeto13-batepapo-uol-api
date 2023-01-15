@@ -119,3 +119,23 @@ server.post('/messages', async(req, res) => {
         return res.status(500).send(error.message);
     }
 });
+
+server.post('/status', async(req, res) => {
+    const user = req.headers.user;
+
+    try{
+        const existingName = await db.collection('participants').findOne({name:user});
+
+        if(!existingName) return res.sendStatus(404);
+
+        await db.collection('participants').updateOne(
+            { name: user },
+            {$set: {lastStatus: Date.now()}}
+        );
+
+        return res.sendStatus(200);
+    }
+    catch(error){
+        return res.status(500).send(error.message);
+    }
+});
