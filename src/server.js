@@ -139,3 +139,28 @@ server.post('/status', async(req, res) => {
         return res.status(500).send(error.message);
     }
 });
+
+setInterval(async() => {
+
+    try{
+        const gettingParticipants = await db.collection('participants').find().toArray();
+        
+        gettingParticipants.map(async(participant) => {
+            if(participant.lastStatus / 1000 > 10){
+                await db.collection('messages').insertOne(
+                    {
+                        from: participant.name,
+                        to: 'Todos',
+                        text: 'sai da sala...',
+                        type: 'message',
+                        time: dayjs().format("HH:mm:ss")
+                    }
+                )
+            }
+        });
+    }
+    catch(error){
+        console.log("Erro na conexão do servidor!");
+    }  
+
+}, 15000);
