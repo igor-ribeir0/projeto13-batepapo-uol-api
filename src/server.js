@@ -26,13 +26,33 @@ server.listen(PORT);
 
 server.get('/participants', async(req, res) => {
     try{
-        const gettingData = await db.collection('participants').find().toArray();
+        const gettingParticipants = await db.collection('participants').find().toArray();
 
-        return res.status(200).send(gettingData);
+        return res.status(200).send(gettingParticipants);
     }
     catch(error){
         return res.status(500).send(error.message);
     } 
+});
+
+server.get('/messages', async(req, res) => {
+    const limit = parseInt(req.query.limit);
+    const user = req.headers.user; 
+
+    try{
+        const gettingMessages = await db.collection('messages').find().toArray();
+        const gettingUserMessages = gettingMessages.filter((message) => message.to === user || (message.to === 'Todos' || message.to === 'todos') || message.from === user);
+
+        if(limit === undefined){
+            return res.status(200).send(gettingUserMessages.reverse());
+        }
+        else{
+            return res.status(200).send(gettingUserMessages.slice(-limit).reverse());
+        }
+    }
+    catch(error){
+        return res.status(500).send(error.message);
+    }
 });
 
 server.post('/participants', async(req, res) => {
@@ -87,8 +107,9 @@ server.post('/messages', async(req, res) => {
             {
                 from: sender,
                 to: to,
+                text: text,
                 type: type,
-                time: dayjs().format('HH:MM:SS')
+                time: dayjs().format('HH:mm:ss')
             }
         );
 
