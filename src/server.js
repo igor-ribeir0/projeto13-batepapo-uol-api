@@ -57,3 +57,44 @@ server.post('/participants', async(req, res) => {
         return res.status(500).send(error.message);
     }
 });
+
+server.post('/messages', async(req, res) => {
+    const {to, text, type} = req.body;
+    const sender = req.headers.user; 
+    const schema = joi.object(
+        {
+            to: joi.string().required(),
+            text: joi.string().required(),
+            type: joi.string().required().valid('message', 'private_message') 
+        }
+    );
+    const message = {to: to, text: text, type: type};
+    const validation = schema.validate(message, {abortEarly: false});
+
+    if (validation.error) {
+        const errors = validation.error.details.map((detail) => detail.message);
+        return res.status(422).send(errors);
+    };
+
+    try{
+        const existingName = await db.collection('participants').findOne({name: sender});
+
+        if(!existingName){
+            return res.status(422).send('O from deve ser um participante existente na lista de participantes');
+        };
+
+        await db.collection('messages').insertOne(
+            {
+                from: sender,
+                to: to,
+                type: type,
+                time: dayjs().format('HH:MM:SS')
+            }
+        );
+
+        return res.sendStatus(201);
+    }
+    catch(error){
+        return res.status(500).send(error.message);
+    }
+});
